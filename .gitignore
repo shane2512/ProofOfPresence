@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — NEVER commit real secrets
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +40,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# hardhat compile output and cache — generated, never commit
+/artifacts/
+/cache/
+/typechain-types/
+
+# CRE workflow — nested dependencies and secrets
+proofofpresence/my-workflow/node_modules/
+proofofpresence/my-workflow/.cre_build_tmp.js
+
+# CRE secrets file — contains real API keys, NEVER commit
+proofofpresence/secrets.yaml
