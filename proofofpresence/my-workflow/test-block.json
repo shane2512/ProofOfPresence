@@ -1,0 +1,9 @@
+{
+  "wallet_address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  "event_id": "devcon-2025-day1",
+  "tier": 2,
+  "nullifier_hash": "0x2a4b6c8d9e1f2034567890abcdef1234567890abcdef1234567890abcdef1234",
+  "merkle_root": "",
+  "proof": "",
+  "expires_at": 9999999999
+}

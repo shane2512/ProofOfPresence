@@ -1,0 +1,7 @@
+{
+  "contractAddress": "0xbA985984B1319451968f42281b1a92Ca709cF820",
+  "worldIdAppId": "app_ee1886c8f0481e50d3569c6f6ba31c34",
+  "worldIdAction": "event_attendance",
+  "chainSelectorName": "ethereum-testnet-sepolia",
+  "gasLimit": "500000"
+}
