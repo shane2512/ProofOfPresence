@@ -1,0 +1,9 @@
+{
+  "network": "baseSepolia",
+  "PoP_CCIP_Receiver": "0x508eC020139E6fcdA3878B18898F0E372D906b1a",
+  "router": "0xD3b06cEbF099CE7DA4AcCf578aaebFDBd6e88a93",
+  "sourceChainSelector": "16015286601757825753",
+  "trustedSourceContract": "0xbA985984B1319451968f42281b1a92Ca709cF820",
+  "deployer": "0x2801Cd130F6dc93D89949476d70E2E6f033270EC",
+  "deployedAt": "2026-03-04T19:20:39.067Z"
+}
