@@ -17,9 +17,15 @@
     "@chainlink/contracts": "^1.5.0",
     "@chainlink/contracts-ccip": "^1.4.0",
     "@openzeppelin/contracts": "^5.0.2",
+    "@privy-io/react-auth": "^3.16.0",
+    "@worldcoin/idkit": "^4.0.8",
+    "@worldcoin/minikit-js": "^1.11.0",
     "next": "16.1.6",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "viem": "^2.47.0",
+    "wagmi": "^3.5.0"
   },
   "devDependencies": {
     "@chainlink/local": "^0.2.7",
