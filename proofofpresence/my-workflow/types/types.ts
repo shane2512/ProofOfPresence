@@ -6,6 +6,7 @@ export type Config = {
   worldIdAction: string;     // event_attendance
   chainSelectorName: string; // "ethereum-testnet-sepolia" — used by getNetwork()
   gasLimit: string;          // e.g. "500000" — gas for Keystone Forwarder call
+  skipWorldIdVerify?: boolean; // true in staging: skip real World ID API call (simulator proofs are invalid against production)
 };
 
 // Payload arriving from the HTTP Trigger (frontend POST)

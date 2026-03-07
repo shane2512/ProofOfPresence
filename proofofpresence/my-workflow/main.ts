@@ -135,7 +135,13 @@ const onHttpTrigger = (runtime: Runtime<Config>, payload: HTTPPayload): string =
   let verified = false;
 
   if (data.tier === 1) {
-    // Tier 1: ZK orb proof â€” call World ID /verify API
+    // Staging flag: simulator proofs are invalid against the production World ID API.
+    // When skipWorldIdVerify is true in config, bypass the API call and trust the proof.
+    if (runtime.config.skipWorldIdVerify) {
+      runtime.log("PoP: skipWorldIdVerify=true — skipping World ID API call (staging/simulator mode)");
+      verified = true;
+    } else {
+    // Tier 1: ZK orb proof — call World ID /verify API
     const verifyUrl =
       `https://developer.worldcoin.org/api/v1/verify/${runtime.config.worldIdAppId}`;
 
@@ -200,6 +206,7 @@ const onHttpTrigger = (runtime: Runtime<Config>, payload: HTTPPayload): string =
         error: `World ID verification failed: ${errorCode}`,
       });
     }
+    } // end else (skipWorldIdVerify === false)
   } else if (data.tier === 2) {
     // Tier 2: Privy email/phone â€” presence of nullifier_hash is sufficient
     if (data.nullifier_hash && data.nullifier_hash.length > 0) {
