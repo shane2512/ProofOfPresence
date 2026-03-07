@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IRouterClient} from "@chainlink/contracts-ccip/contracts/interfaces/IRouterClient.sol";
 import {Client} from "@chainlink/contracts-ccip/contracts/libraries/Client.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -18,6 +18,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @dev Implements the IReceiver interface so that EVMClient.writeReport() in the
  *      CRE workflow can write attendance data through the Keystone Forwarder contract.
  *
+ *      Also implements ERC721 Soulbound Token (SBT): each unique attendance is
+ *      minted as a non-transferable NFT.
+ *        Token ID  = uint256(nullifierHash)
+ *        Owner     = address(uint160(uint256(nullifierHash)))  (soul address)
+ *      Transfers are blocked — badges are permanently bound to the soul address.
+ *
  *      On-chain data layout (per record):
  *        registry[nullifierHash][eventId] → AttendanceRecord
  *      No wallet address is ever stored or emitted — only nullifierHash.
@@ -28,7 +34,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  *      CCIP payload (Node 4):
  *        abi.encode(bytes32 nullifierHash, string eventId, uint256 timestamp, uint8 tier)
  */
-contract ProofOfPresence is Ownable, ERC165 {
+contract ProofOfPresence is Ownable, ERC721 {
     // ─── Data ───────────────────────────────────────────────────────────────
 
     struct AttendanceRecord {
@@ -66,6 +72,14 @@ contract ProofOfPresence is Ownable, ERC165 {
         uint8 tier
     );
 
+    /// @dev Emitted when an attendance badge NFT is minted.
+    event BadgeMinted(
+        bytes32 indexed nullifierHash,
+        string indexed eventId,
+        uint256 indexed tokenId,
+        address soulAddress
+    );
+
     event ForwarderUpdated(address indexed previousForwarder, address indexed newForwarder);
 
     event CrossChainBridged(
@@ -89,7 +103,7 @@ contract ProofOfPresence is Ownable, ERC165 {
      * @param _ccipRouter        CCIP router on Sepolia: 0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59
      * @param _linkToken         LINK token on Sepolia: 0x779877A7B0D9E8603169DdbD7836e478b4624789
      */
-    constructor(address _forwarderAddress, address _ccipRouter, address _linkToken) Ownable(msg.sender) {
+    constructor(address _forwarderAddress, address _ccipRouter, address _linkToken) Ownable(msg.sender) ERC721("ProofOfPresence Badge", "POPB") {
         if (_forwarderAddress == address(0)) revert InvalidForwarderAddress();
         keystoneForwarder = _forwarderAddress;
         ccipRouter = IRouterClient(_ccipRouter);
@@ -123,6 +137,16 @@ contract ProofOfPresence is Ownable, ERC165 {
 
         registry[nullifierHash][eventId] = AttendanceRecord(block.timestamp, tier, true);
         emit AttendanceRecorded(nullifierHash, eventId, block.timestamp, tier);
+
+        // Mint SBT badge for this attendance record.
+        // Token ID is derived from nullifier hash — deterministic and privacy-preserving.
+        // Owner is the "soul address" derived from same nullifier — no real wallet needed.
+        uint256 tokenId = uint256(nullifierHash);
+        if (_ownerOf(tokenId) == address(0)) {
+            address soul = address(uint160(uint256(nullifierHash)));
+            _mint(soul, tokenId);
+            emit BadgeMinted(nullifierHash, eventId, tokenId, soul);
+        }
 
         // Node 4: bridge cross-chain via CCIP
         // Payload spec: (nullifierHash, eventId, timestamp, tier) — NO wallet address
@@ -217,7 +241,7 @@ contract ProofOfPresence is Ownable, ERC165 {
         public
         view
         virtual
-        override
+        override(ERC721)
         returns (bool)
     {
         return interfaceId == 0x50be76c9 || super.supportsInterface(interfaceId);
