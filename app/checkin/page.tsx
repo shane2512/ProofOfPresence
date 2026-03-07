@@ -171,6 +171,22 @@ function CheckInContent() {
       });
       const data = (await res.json()) as { success: boolean; error?: string };
       if (data.success) {
+        // Persist the full verified payload so the processing page can trigger
+        // `cre workflow simulate` with the real proof fields.
+        const checkinPayload = {
+          wallet_address: "0x0000000000000000000000000000000000000000",
+          event_id: eventId,
+          tier: 1,
+          nullifier_hash: nullifier || `staging-${Date.now()}`,
+          merkle_root: resp0?.merkle_root ?? "",
+          proof: resp0?.proof ?? "",
+          expires_at: expiresAt,
+        };
+        try {
+          sessionStorage.setItem("pop_checkin_payload", JSON.stringify(checkinPayload));
+        } catch {
+          // sessionStorage not available (SSR guard) — processing page will use URL params
+        }
         router.push(
           `/processing?event=${encodeURIComponent(eventId)}&tier=1&nullifier=${encodeURIComponent(nullifier || `staging-${Date.now()}`)}`
         );

@@ -10,7 +10,7 @@ import { createPublicClient, http, keccak256, toBytes } from "viem";
 import { sepolia } from "viem/chains";
 
 const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ??
-  "0xbA985984B1319451968f42281b1a92Ca709cF820") as `0x${string}`;
+  "0x424F855FcFBCF5544bcfCC1bEF3c60D52632d676") as `0x${string}`;
 
 const HAS_ATTENDED_ABI = [
   {
@@ -39,6 +39,7 @@ function CredentialContent() {
   const eventId = params.get("event") ?? "";
   const tier = Number(params.get("tier") ?? "1");
   const nullifier = params.get("nullifier") ?? "";
+  const txHash = params.get("txHash") ?? "";
   const eventLabel = EVENT_LABELS[eventId] ?? eventId;
 
   const [onChainStatus, setOnChainStatus] = useState<"checking" | "confirmed" | "not-found" | "error">(
@@ -46,6 +47,18 @@ function CredentialContent() {
   );
   const [onChainTimestamp, setOnChainTimestamp] = useState<string>("");
   const [onChainTier, setOnChainTier] = useState<number>(0);
+  const [creLog, setCreLog] = useState<{ success: boolean; txHash: string; output: string } | null>(null);
+
+  // Load CRE log saved by the processing page
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("pop_cre_log");
+      if (raw) {
+        setCreLog(JSON.parse(raw) as { success: boolean; txHash: string; output: string });
+        sessionStorage.removeItem("pop_cre_log");
+      }
+    } catch { /* ok */ }
+  }, []);
 
   useEffect(() => {
     if (!nullifier) return;
@@ -141,15 +154,67 @@ function CredentialContent() {
           )}
         </div>
 
-        {/* Explorer link */}
-        <a
-          href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-zinc-500 underline underline-offset-4 hover:text-zinc-300"
-        >
-          View contract on Sepolia Etherscan →
-        </a>
+        {/* CRE Simulation log */}
+        <div className="w-full rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+            CRE Simulate Output
+          </p>
+          {creLog === null ? (
+            <p className="text-xs text-zinc-600">Log not available (page was refreshed?)</p>
+          ) : (
+            <>
+              <div className={`mb-2 flex items-center gap-2 text-sm font-medium ${
+                creLog.success ? "text-emerald-400" : "text-red-400"
+              }`}>
+                <span>{creLog.success ? "✅" : "❌"}</span>
+                <span>{creLog.success ? "Simulation succeeded" : "Simulation failed"}</span>
+              </div>
+              {creLog.txHash && (
+                <a
+                  href={`https://sepolia.etherscan.io/tx/${creLog.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mb-2 block break-all font-mono text-xs text-cyan-400 underline underline-offset-2"
+                >
+                  {creLog.txHash}
+                </a>
+              )}
+              <pre className="max-h-64 overflow-auto rounded-lg bg-black p-3 text-xs text-zinc-300 whitespace-pre-wrap">
+                {creLog.output || "(no output)"}
+              </pre>
+            </>
+          )}
+        </div>
+
+        {/* Badge minting transaction */}
+        {(txHash || creLog?.txHash) && (
+          <a
+            href={`https://sepolia.etherscan.io/tx/${txHash || creLog?.txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-center hover:bg-yellow-500/20 transition"
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-yellow-400">
+              🏅 Badge Minted — View Transaction
+            </p>
+            <p className="mt-1 break-all font-mono text-xs text-yellow-300">
+              {txHash || creLog?.txHash}
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">Sepolia Etherscan →</p>
+          </a>
+        )}
+
+        {/* Contract link — shown only as small secondary link if no tx hash */}
+        {!txHash && !creLog?.txHash && (
+          <a
+            href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-zinc-500 underline underline-offset-4 hover:text-zinc-300"
+          >
+            View contract on Sepolia Etherscan →
+          </a>
+        )}
 
         {/* Actions */}
         <div className="flex w-full flex-col gap-3">
