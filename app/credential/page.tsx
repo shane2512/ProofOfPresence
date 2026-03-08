@@ -201,11 +201,25 @@ function CredentialContent() {
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-xs">✓</span>
                 Confirmed on-chain
               </div>
-              <div className="grid grid-cols-2 gap-y-1 text-xs">
+              <div className="grid grid-cols-2 gap-y-1.5 text-xs">
                 <span className="text-zinc-500">Recorded</span>
                 <span className="text-right text-zinc-200">{onChainTimestamp}</span>
                 <span className="text-zinc-500">Tier</span>
                 <span className="text-right text-zinc-200">{onChainTier === 1 ? "Orb" : "Email/Phone"}</span>
+                {mintTxHash && (
+                  <>
+                    <span className="text-zinc-500">Mint Tx</span>
+                    <a
+                      href={`https://sepolia.etherscan.io/tx/${mintTxHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-right font-mono text-yellow-300 truncate hover:text-yellow-200 transition-colors"
+                      title={mintTxHash}
+                    >
+                      {mintTxHash.slice(0, 10)}…{mintTxHash.slice(-8)} ↗
+                    </a>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -245,17 +259,19 @@ function CredentialContent() {
           </div>
         </details>
 
-        {/* Contract fallback link */}
-        {!mintTxHash && (
-          <a
-            href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-zinc-600 underline underline-offset-4 transition hover:text-zinc-400"
-          >
-            View contract on Sepolia Etherscan →
-          </a>
-        )}
+        {/* Etherscan link — tx if minted, contract otherwise */}
+        <a
+          href={
+            mintTxHash
+              ? `https://sepolia.etherscan.io/tx/${mintTxHash}`
+              : `https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`
+          }
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-zinc-600 underline underline-offset-4 transition hover:text-zinc-400"
+        >
+          {mintTxHash ? "View mint transaction on Sepolia Etherscan →" : "View contract on Sepolia Etherscan →"}
+        </a>
 
         {/* Actions */}
         <div className="flex w-full flex-col gap-3 pt-2">
