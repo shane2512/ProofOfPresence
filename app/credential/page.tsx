@@ -95,52 +95,84 @@ function CredentialContent() {
   }, [nullifier, eventId]);
 
   const isOrb = tier === 1;
+  const mintTxHash = txHash || creLog?.txHash;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-black px-6 py-12 font-sans text-white">
-      <main className="flex w-full max-w-sm flex-col items-center gap-8">
-        {/* Badge */}
-        <div
-          className={`flex h-32 w-32 flex-col items-center justify-center rounded-full text-6xl shadow-2xl ${
+      <div className="dot-grid relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-black px-6 py-12 font-sans text-white">
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className={`absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] ${
+          isOrb ? "bg-yellow-500/10" : "bg-zinc-500/8"
+        }`} />
+      </div>
+
+      <main className="relative flex w-full max-w-sm flex-col items-center gap-6">
+        {/* Badge with glow rings */}
+        <div className="relative flex items-center justify-center py-4">
+          {isOrb && (
+            <>
+              <div className="absolute h-40 w-40 animate-pulse rounded-full bg-yellow-400/15 blur-xl" />
+              <div className="absolute h-32 w-32 rounded-full bg-yellow-400/10" />
+            </>
+          )}
+          <div className={`relative flex h-28 w-28 items-center justify-center rounded-full text-5xl shadow-2xl ring-4 ${
             isOrb
-              ? "bg-gradient-to-br from-yellow-400 to-amber-600"
-              : "bg-gradient-to-br from-zinc-400 to-zinc-600"
-          }`}
-        >
-          ✦
+              ? "bg-gradient-to-br from-yellow-400 to-amber-600 ring-yellow-500/40 shadow-yellow-500/25"
+              : "bg-gradient-to-br from-zinc-400 to-zinc-600 ring-zinc-600/30"
+          }`}>
+            ✦
+          </div>
         </div>
 
-        <div className="flex flex-col items-center gap-1 text-center">
+        <div className="flex flex-col items-center gap-1.5 text-center">
           <h1 className="text-2xl font-bold">Credential Issued!</h1>
           <p className="text-base text-zinc-300">{eventLabel}</p>
-          <span
-            className={`mt-1 rounded-full px-3 py-0.5 text-xs font-semibold ${
-              isOrb ? "bg-yellow-500/20 text-yellow-300" : "bg-zinc-700 text-zinc-300"
-            }`}
-          >
+          <span className={`mt-0.5 rounded-full px-3 py-0.5 text-xs font-semibold ring-1 ${
+            isOrb
+              ? "bg-yellow-500/20 text-yellow-300 ring-yellow-500/30"
+              : "bg-zinc-800 text-zinc-300 ring-zinc-700"
+          }`}>
             {isOrb ? "🥇 Tier 1 — World ID Orb" : "🥈 Tier 2 — Email / Phone"}
           </span>
         </div>
 
+        {/* Badge Minted — primary CTA */}
+        {mintTxHash && (
+          <a
+            href={`https://sepolia.etherscan.io/tx/${mintTxHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group w-full rounded-2xl border border-yellow-500/40 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 p-4 text-center transition-all duration-200 hover:border-yellow-500/60 hover:from-yellow-500/15 hover:to-amber-500/15"
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-yellow-400">🏅 Badge Minted</p>
+            <p className="mt-1 text-xs text-zinc-400">Soul-bound token issued on Sepolia</p>
+            <p className="mt-2 break-all font-mono text-xs text-yellow-300">{mintTxHash}</p>
+            <p className="mt-1 text-xs text-zinc-500 transition group-hover:text-zinc-400">View transaction on Etherscan ↗</p>
+          </a>
+        )}
+
         {/* On-chain verification panel */}
-        <div className="w-full rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
             On-Chain Record
           </p>
           {onChainStatus === "checking" && (
-            <p className="text-sm text-zinc-400">Verifying on Sepolia…</p>
+            <div className="flex items-center gap-2 text-sm text-zinc-400">
+              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-zinc-400 border-t-transparent" />
+              Verifying on Sepolia…
+            </div>
           )}
           {onChainStatus === "confirmed" && (
             <div className="flex flex-col gap-2 text-sm">
-              <div className="flex items-center gap-2 text-emerald-400">
-                <span>✅</span>
-                <span className="font-medium">Confirmed on-chain</span>
+              <div className="flex items-center gap-2 font-medium text-emerald-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-xs">✓</span>
+                Confirmed on-chain
               </div>
-              <div className="text-zinc-400">
-                Recorded: <span className="text-zinc-200">{onChainTimestamp}</span>
-              </div>
-              <div className="text-zinc-400">
-                Tier: <span className="text-zinc-200">{onChainTier === 1 ? "Orb" : "Email/Phone"}</span>
+              <div className="grid grid-cols-2 gap-y-1 text-xs">
+                <span className="text-zinc-500">Recorded</span>
+                <span className="text-right text-zinc-200">{onChainTimestamp}</span>
+                <span className="text-zinc-500">Tier</span>
+                <span className="text-right text-zinc-200">{onChainTier === 1 ? "Orb" : "Email/Phone"}</span>
               </div>
             </div>
           )}
@@ -154,79 +186,55 @@ function CredentialContent() {
           )}
         </div>
 
-        {/* CRE Simulation log */}
-        <div className="w-full rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
-            CRE Simulate Output
-          </p>
-          {creLog === null ? (
-            <p className="text-xs text-zinc-600">Log not available (page was refreshed?)</p>
-          ) : (
-            <>
-              <div className={`mb-2 flex items-center gap-2 text-sm font-medium ${
-                creLog.success ? "text-emerald-400" : "text-red-400"
+        {/* CRE Simulation log — collapsible */}
+        <details className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/80">
+          <summary className="flex cursor-pointer select-none items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
+                creLog === null ? "bg-zinc-800 text-zinc-500"
+                : creLog.success ? "bg-emerald-500/20 text-emerald-400"
+                : "bg-red-500/20 text-red-400"
               }`}>
-                <span>{creLog.success ? "✅" : "❌"}</span>
-                <span>{creLog.success ? "Simulation succeeded" : "Simulation failed"}</span>
-              </div>
-              {creLog.txHash && (
-                <a
-                  href={`https://sepolia.etherscan.io/tx/${creLog.txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mb-2 block break-all font-mono text-xs text-cyan-400 underline underline-offset-2"
-                >
-                  {creLog.txHash}
-                </a>
-              )}
-              <pre className="max-h-64 overflow-auto rounded-lg bg-black p-3 text-xs text-zinc-300 whitespace-pre-wrap">
+                {creLog === null ? "?" : creLog.success ? "✓" : "✕"}
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-zinc-500">CRE Simulate Output</span>
+            </div>
+            <span className="text-xs text-zinc-600">▸</span>
+          </summary>
+          <div className="border-t border-zinc-800 px-4 py-3">
+            {creLog === null ? (
+              <p className="text-xs text-zinc-600">Log not available (page was refreshed?)</p>
+            ) : (
+              <pre className="max-h-56 overflow-auto rounded-lg bg-black/50 p-3 text-xs text-zinc-300 whitespace-pre-wrap">
                 {creLog.output || "(no output)"}
               </pre>
-            </>
-          )}
-        </div>
+            )}
+          </div>
+        </details>
 
-        {/* Badge minting transaction */}
-        {(txHash || creLog?.txHash) && (
-          <a
-            href={`https://sepolia.etherscan.io/tx/${txHash || creLog?.txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-center hover:bg-yellow-500/20 transition"
-          >
-            <p className="text-xs font-semibold uppercase tracking-widest text-yellow-400">
-              🏅 Badge Minted — View Transaction
-            </p>
-            <p className="mt-1 break-all font-mono text-xs text-yellow-300">
-              {txHash || creLog?.txHash}
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">Sepolia Etherscan →</p>
-          </a>
-        )}
-
-        {/* Contract link — shown only as small secondary link if no tx hash */}
-        {!txHash && !creLog?.txHash && (
+        {/* Contract fallback link */}
+        {!mintTxHash && (
           <a
             href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-zinc-500 underline underline-offset-4 hover:text-zinc-300"
+            className="text-xs text-zinc-600 underline underline-offset-4 transition hover:text-zinc-400"
           >
             View contract on Sepolia Etherscan →
           </a>
         )}
 
         {/* Actions */}
-        <div className="flex w-full flex-col gap-3">
+        <div className="flex w-full flex-col gap-3 pt-2">
           <button
             onClick={() => router.push("/vault")}
-            className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 px-6 py-3 font-semibold text-white transition hover:bg-zinc-800"
+            className="w-full rounded-2xl bg-white px-6 py-3 font-semibold text-black shadow-lg shadow-white/10 transition hover:bg-zinc-100"
           >
             View Credential Vault
           </button>
           <button
             onClick={() => router.push("/")}
-            className="text-sm text-zinc-600 hover:text-zinc-400"
+            className="text-sm text-zinc-600 transition hover:text-zinc-400"
           >
             Back to Home
           </button>

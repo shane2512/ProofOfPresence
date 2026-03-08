@@ -20,15 +20,7 @@ const EVENT_LABELS: Record<string, string> = {
   "devcon-2025-day1": "Devcon 2025 — Day 1",
 };
 
-const SEPOLIA_CONTRACT = "0xbA985984B1319451968f42281b1a92Ca709cF820";
-
-function tierLabel(tier: number) {
-  return tier === 1 ? "Tier 1 — World ID Orb" : "Tier 2 — Email / Phone";
-}
-
-function tierColor(tier: number) {
-  return tier === 1 ? "text-yellow-300 bg-yellow-500/20" : "text-zinc-300 bg-zinc-700";
-}
+const SEPOLIA_CONTRACT = "0x424F855FcFBCF5544bcfCC1bEF3c60D52632d676";
 
 export default function VaultPage() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
@@ -54,10 +46,17 @@ export default function VaultPage() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-black px-6 py-12 font-sans text-white">
-      <div className="mx-auto w-full max-w-sm">
+    <div className="dot-grid relative flex min-h-screen flex-col overflow-hidden bg-black px-6 py-12 font-sans text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-violet-500/8 blur-[100px]" />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-sm">
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-1">
+        <div className="mb-8 flex flex-col gap-1.5">
+          <Link href="/" className="mb-2 self-start text-xs text-zinc-600 transition hover:text-zinc-400">
+            ← Back
+          </Link>
           <h1 className="text-2xl font-bold">Credential Vault</h1>
           <p className="text-sm text-zinc-400">
             Your anonymous attendance record — no wallet address stored.
@@ -75,16 +74,23 @@ export default function VaultPage() {
 
         {/* Credential list */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 py-12 text-center">
-            <div className="text-4xl">🗂️</div>
-            <p className="text-sm text-zinc-500">
-              {credentials.length === 0
-                ? "No credentials yet. Check in to an event first."
-                : "No credentials match that filter."}
-            </p>
+          <div className="flex flex-col items-center gap-4 py-16 text-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-900 text-4xl ring-1 ring-zinc-800">
+              🗂️
+            </div>
+            <div>
+              <p className="font-medium text-zinc-300">
+                {credentials.length === 0 ? "No credentials yet" : "No results found"}
+              </p>
+              <p className="mt-1 text-sm text-zinc-600">
+                {credentials.length === 0
+                  ? "Check in to an event to earn your first badge."
+                  : "Try clearing the filter."}
+              </p>
+            </div>
             <Link
               href="/"
-              className="text-sm text-zinc-400 underline underline-offset-4 hover:text-white"
+              className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400 transition hover:border-zinc-700 hover:text-white"
             >
               Go to Check-In →
             </Link>
@@ -94,49 +100,62 @@ export default function VaultPage() {
             {filtered.map((c) => (
               <div
                 key={`${c.nullifier_hash}-${c.event_id}`}
-                className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900 p-4"
+                className={`flex flex-col gap-3 rounded-2xl border p-4 transition-all duration-200 ${
+                  c.tier === 1
+                    ? "border-yellow-500/20 bg-yellow-500/5 hover:border-yellow-500/30"
+                    : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"
+                }`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="font-semibold text-white">
+                {/* Header row */}
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl shadow-lg ${
+                    c.tier === 1
+                      ? "bg-gradient-to-br from-yellow-400 to-amber-600 shadow-yellow-500/20"
+                      : "bg-gradient-to-br from-zinc-500 to-zinc-700"
+                  }`}>
+                    ❆
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-white truncate">
                       {EVENT_LABELS[c.event_id] ?? c.event_id}
                     </div>
-                    <div className="mt-0.5 text-xs text-zinc-500">
+                    <div className="text-xs text-zinc-500">
                       {new Date(c.timestamp * 1000).toLocaleString()}
                     </div>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${tierColor(c.tier)}`}
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    c.tier === 1 ? "bg-yellow-500/20 text-yellow-300" : "bg-zinc-800 text-zinc-400"
+                  }`}>
+                    {c.tier === 1 ? "🥇 Orb" : "🥈 Email"}
+                  </span>
+                </div>
+
+                {/* Mint tx — primary CTA */}
+                {c.txHash ? (
+                  <a
+                    href={`https://sepolia.etherscan.io/tx/${c.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded-xl border border-yellow-500/20 bg-yellow-500/8 px-3 py-2 text-xs transition hover:bg-yellow-500/15"
                   >
-                    {tierLabel(c.tier)}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-1 text-xs text-zinc-600">
-                  <span className="break-all">
-                    Nullifier: {c.nullifier_hash.slice(0, 18)}…
-                  </span>
-                </div>
-
-                <div className="flex gap-3 text-xs">
+                    <span className="text-yellow-400">🎖️ Badge minted</span>
+                    <span className="font-mono text-zinc-500">{c.txHash.slice(0, 10)}…{c.txHash.slice(-6)} ↗</span>
+                  </a>
+                ) : (
                   <a
                     href={`https://sepolia.etherscan.io/address/${SEPOLIA_CONTRACT}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-zinc-400 underline underline-offset-2 hover:text-white"
+                    className="flex items-center justify-between rounded-xl border border-zinc-800 px-3 py-2 text-xs text-zinc-500 transition hover:text-zinc-300"
                   >
-                    Sepolia explorer
+                    <span>Contract</span>
+                    <span className="font-mono">{SEPOLIA_CONTRACT.slice(0, 10)}… ↗</span>
                   </a>
-                  {c.txHash && (
-                    <a
-                      href={`https://sepolia.etherscan.io/tx/${c.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-zinc-400 underline underline-offset-2 hover:text-white"
-                    >
-                      Tx hash
-                    </a>
-                  )}
+                )}
+
+                {/* Nullifier (truncated) */}
+                <div className="text-xs text-zinc-700">
+                  {c.nullifier_hash.slice(0, 20)}…
                 </div>
               </div>
             ))}
@@ -144,7 +163,7 @@ export default function VaultPage() {
         )}
 
         <div className="mt-8">
-          <Link href="/" className="text-sm text-zinc-600 hover:text-zinc-300">
+          <Link href="/" className="text-sm text-zinc-700 transition hover:text-zinc-400">
             ← Back to Home
           </Link>
         </div>
