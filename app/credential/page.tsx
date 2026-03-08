@@ -136,7 +136,41 @@ function CredentialContent() {
           </span>
         </div>
 
-        {/* Badge Minted — primary CTA */}
+        {/* Proof Details — nullifier hash + mint tx hash */}
+        {(nullifier || mintTxHash) && (
+          <div className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">
+              Proof Details
+            </p>
+            <div className="flex flex-col gap-3">
+              {nullifier && (
+                <div>
+                  <p className="mb-1 text-xs text-zinc-500">
+                    Nullifier Hash{" "}
+                    <span className="text-zinc-700">— ZK identifier stored on-chain</span>
+                  </p>
+                  <p className="break-all font-mono text-xs text-emerald-300">{nullifier}</p>
+                </div>
+              )}
+              {mintTxHash && (
+                <div>
+                  <p className="mb-1 text-xs text-zinc-500">Mint Transaction</p>
+                  <a
+                    href={`https://sepolia.etherscan.io/tx/${mintTxHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="break-all font-mono text-xs text-yellow-300 transition hover:text-yellow-200"
+                  >
+                    {mintTxHash}
+                  </a>
+                  <p className="mt-0.5 text-xs text-zinc-600">View on Sepolia Etherscan ↗</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Badge Minted — Etherscan quick-link */}
         {mintTxHash && (
           <a
             href={`https://sepolia.etherscan.io/tx/${mintTxHash}`}
@@ -146,7 +180,6 @@ function CredentialContent() {
           >
             <p className="text-xs font-semibold uppercase tracking-widest text-yellow-400">🏅 Badge Minted</p>
             <p className="mt-1 text-xs text-zinc-400">Soul-bound token issued on Sepolia</p>
-            <p className="mt-2 break-all font-mono text-xs text-yellow-300">{mintTxHash}</p>
             <p className="mt-1 text-xs text-zinc-500 transition group-hover:text-zinc-400">View transaction on Etherscan ↗</p>
           </a>
         )}
